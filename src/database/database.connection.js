@@ -15,7 +15,8 @@ const db = new Pool(configDatabase);
 
 try {
     await db.connect();
-    console.log('Database online');
+    
+    console.log(`Database connected, environment: ${process.env.NODE_ENV}`);
 } catch (err) {
     console.log('ERROR:', err);
 }
