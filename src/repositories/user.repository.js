@@ -8,7 +8,7 @@ export async function getUserRepo(id, email) {
             users 
         WHERE 
             users.id= $1 
-        AND
+        OR
             users.email= $2;
             `,
         [id, email]
@@ -23,6 +23,17 @@ export async function insertUserRepo(name, email, cryptPassword, photo) {
             ($1, $2, $3, $4);
         `,
         [name, email, cryptPassword, photo]
+    );
+}
+
+export default function insertSessionRepo(id, token) {
+    return db.query(
+        `INSERT INTO 
+            sessions ("userId", "token")
+        VALUES
+            ($1, $2);
+        `,
+        [id, token]
     );
 }
 
