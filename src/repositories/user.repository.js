@@ -26,7 +26,7 @@ export async function insertUserRepo(name, email, cryptPassword, photo) {
     );
 }
 
-export default function insertSessionRepo(id, token) {
+export async function insertSessionRepo(id, token) {
     return db.query(
         `INSERT INTO 
             sessions ("userId", "token")
