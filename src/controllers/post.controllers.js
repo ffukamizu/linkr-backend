@@ -12,11 +12,11 @@ export const createPost = async (req, res) => {
 
     if(text) {
       const tags = text.match(/#[a-z0-9_]+/g);
-      const tagsArr = [];
       
-      tags.forEach((tag) => tagsArr.push([postId, tag]));
-      
-      await createHashtagRepo(tagsArr);
+      if(tags) {
+        const tagsArr = tags.map(tag => [postId, tag]);
+        await createHashtagRepo(tagsArr);
+      };
     };
 
     return res.status(201).send();
