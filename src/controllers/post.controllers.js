@@ -30,7 +30,7 @@ export const createPost = async (req, res) => {
 export const getPosts = async (req, res) => {
   try {
     const { rows: posts, rowCount } = await readPostRepo();
-    if (rowCount === 0) return [];
+    if (rowCount === 0) return res.send([]);
     for (const post of posts) {
       await urlMetadata(post.link).then(
         (metadata) => {
@@ -41,9 +41,7 @@ export const getPosts = async (req, res) => {
             image: metadata['og:image']
           }
         },
-        (err) => {
-          return res.status(500).send(err.message);
-        })
+        (err) => {})
     };
     return res.send(posts);
 
