@@ -10,8 +10,8 @@ export async function getUserRepo(id, email) {
             users.id= $1 
         OR
             users.email= $2;
-        `,
-        [userId, userEmail]
+            `,
+        [id, email]
     );
 }
 
