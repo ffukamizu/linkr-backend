@@ -1,5 +1,6 @@
+import urlMetadata from "url-metadata";
 import { createHashtagRepo } from "../repositories/hashtag.repository.js";
-import { createPostRepo } from "../repositories/post.repository.js";
+import { createPostRepo, readPostRepo } from "../repositories/post.repository.js";
 
 export const createPost = async (req, res) => {
   try {
@@ -23,5 +24,30 @@ export const createPost = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).send("Houve um erro ao publicar seu link");
+  }
+};
+
+export const getPosts = async (req, res) => {
+  try {
+    const { rows: posts, rowCount } = await readPostRepo();
+    if (rowCount === 0) return [];
+    for (const post of posts) {
+      await urlMetadata(post.link).then(
+        (metadata) => {
+          post.link = {
+            url: metadata['og:url'],
+            title: metadata['og:title'],
+            description: metadata['og:description'],
+            image: metadata['og:image']
+          }
+        },
+        (err) => {
+          return res.status(500).send(err.message);
+        })
+    };
+    return res.send(posts);
+
+  } catch (err) {
+    return res.status(500).send(err.message);
   }
 };
