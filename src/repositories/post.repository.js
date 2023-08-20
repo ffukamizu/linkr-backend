@@ -19,6 +19,10 @@ export const readPostRepo = async () => {
   `);
 };
 
+export const updateTextRepo = async (id, text) => {
+  return await db.query(`UPDATE posts SET text = $2 WHERE id = $1`, [id, text]);
+};
+
 export const deletePostRepo = async (id, userId) => {
   return await db.query(`DELETE FROM posts WHERE id = $1 AND "userId" = $2`, [id, userId]);
 };
