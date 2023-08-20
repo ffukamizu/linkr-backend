@@ -1,7 +1,15 @@
 import urlMetadata from "url-metadata";
 import { createHashtagRepo } from "../repositories/hashtag.repository.js";
-import { createPostRepo, deletePostRepo, getPostById, readPostRepo } from "../repositories/post.repository.js";
+import { createPostRepo, deletePostRepo, getPostById, readPostRepo, updateTextRepo } from "../repositories/post.repository.js";
 import { deleteHashtagByPostIdRepo } from "../repositories/hashtag.repository.js";
+
+const extractHashtags = (postId, text) => {
+  const tags = text.match(/#[a-z0-9_]+/g);
+
+  if(tags) return tags.map(tag => [postId, tag]);
+
+  return null;
+};
 
 export const createPost = async (req, res) => {
   try {
@@ -13,12 +21,9 @@ export const createPost = async (req, res) => {
     const postId = result.rows[0].id;
 
     if(text) {
-      const tags = text.match(/#[a-z0-9_]+/g);
+      const hashtags = extractHashtags(postId, text)
       
-      if(tags) {
-        const tagsArr = tags.map(tag => [postId, tag]);
-        await createHashtagRepo(tagsArr);
-      };
+      if(hashtags) await createHashtagRepo(hashtags);
     };
 
     return res.status(201).send();
@@ -49,6 +54,33 @@ export const getPosts = async (req, res) => {
   } catch (err) {
     return res.status(500).send(err.message);
   }
+};
+
+export const updateText = async (req, res) => {
+  try {
+    const userId = res.locals.user.id;
+    const { id } = req.params;
+    const { text } = req.body;
+
+    const post = await getPostById(id);
+    if(post.rowCount === 0) return res.sendStatus(404);
+    if(post.rows[0].userId !== userId) return res.status(401).send("Apenas o autor do post pode editá-lo!");
+
+    await deleteHashtagByPostIdRepo(post.rows[0].id);
+
+    await updateTextRepo(id, text);
+
+    if(text) {
+      const hashtags = extractHashtags(id, text);
+      
+      if(hashtags) await createHashtagRepo(hashtags);
+    };
+
+    return res.sendStatus(204);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error.message);
+  };
 };
 
 export const deletePostById = async (req, res) => {
