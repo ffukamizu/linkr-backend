@@ -1,7 +1,10 @@
 import urlMetadata from "url-metadata";
-import { createHashtagRepo } from "../repositories/hashtag.repository.js";
-import { createPostRepo, deletePostRepo, getPostById, readPostRepo, updateTextRepo } from "../repositories/post.repository.js";
-import { deleteHashtagByPostIdRepo } from "../repositories/hashtag.repository.js";
+import {
+  createHashtagRepo, deleteHashtagByPostIdRepo, readHashtagsRepo
+} from "../repositories/hashtag.repository.js";
+import {
+  createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsRepo, updateTextRepo
+} from "../repositories/post.repository.js";
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -10,6 +13,21 @@ const extractHashtags = (postId, text) => {
 
   return null;
 };
+
+const extractMetadata = async (link) => (
+  await urlMetadata(link).then(
+    (metadata) => {
+      return {
+        url: metadata['og:url'],
+        title: metadata['og:title'],
+        description: metadata['og:description'],
+        image: metadata['og:image']
+      }
+    },
+    (err) => {
+      return link;
+    })
+)
 
 export const createPost = async (req, res) => {
   try {
@@ -35,19 +53,10 @@ export const createPost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
   try {
-    const { rows: posts, rowCount } = await readPostRepo();
+    const { rows: posts, rowCount } = await readPostsRepo();
     if (rowCount === 0) return res.send([]);
     for (const post of posts) {
-      await urlMetadata(post.link).then(
-        (metadata) => {
-          post.link = {
-            url: metadata['og:url'],
-            title: metadata['og:title'],
-            description: metadata['og:description'],
-            image: metadata['og:image']
-          }
-        },
-        (err) => {})
+      post.link = await extractMetadata(post.link);
     };
     return res.send(posts);
 
@@ -55,6 +64,29 @@ export const getPosts = async (req, res) => {
     return res.status(500).send(err.message);
   }
 };
+
+export const getPostsByHashtag = async (req, res) => {
+  try {
+    const { hashtag } = req.params;
+    const { rows: posts, rowCount } = await readPostsByHashtagRepo(hashtag);
+    if (rowCount === 0) return res.send([]);
+    for (const post of posts) {
+      post.link = await extractMetadata(post.link);
+    };
+    return res.send(posts);
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}
+
+export const getTreading = async (req, res) => {
+  try {
+    const { rows: treading } = await readHashtagsRepo();
+    return res.send(treading);
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}
 
 export const updateText = async (req, res) => {
   try {
