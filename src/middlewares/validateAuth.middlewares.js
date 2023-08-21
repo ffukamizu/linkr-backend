@@ -9,7 +9,7 @@ export default async function validateAuth(req, res, next) {
     if (!token) return res.status(401).send('Please, sign-in again');
 
     try {
-        const { id, email } = jwt.verify(token, process.env.JWT_SECRET);
+        const { id, email } = jwt.verify(token, process.env.SECRET_KEY);
 
         const user = await getUserRepo(id, email);
 

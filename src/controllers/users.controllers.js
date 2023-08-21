@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
-import { validateMailRepo, insertUserRepo, getUserRepo, insertSessionRepo } from '../repositories/user.repository.js';
+import { getUserRepo, insertSessionRepo, insertUserRepo, validateMailRepo } from '../repositories/user.repository.js';
 
 dotenv.config();
 
@@ -54,3 +54,14 @@ export async function signUp(req, res) {
 }
 
 export async function signOut(req, res) {}
+
+
+export async function getUserById(req, res) {
+    const { id } = req.params;
+    try {
+        const { rows: [user] } = await getUserRepo(id, null);
+        return res.send(user.name);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
