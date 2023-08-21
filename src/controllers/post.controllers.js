@@ -79,10 +79,10 @@ export const getPostsByHashtag = async (req, res) => {
   }
 }
 
-export const getTreading = async (req, res) => {
+export const getTrending = async (req, res) => {
   try {
-    const { rows: treading } = await readHashtagsRepo();
-    return res.send(treading);
+    const { rows: trending } = await readHashtagsRepo();
+    return res.send(trending);
   } catch (err) {
     return res.status(500).send(err.message);
   }
