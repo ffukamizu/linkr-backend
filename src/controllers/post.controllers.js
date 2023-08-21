@@ -3,7 +3,7 @@ import {
   createHashtagRepo, deleteHashtagByPostIdRepo, readHashtagsRepo
 } from "../repositories/hashtag.repository.js";
 import {
-  createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsRepo, updateTextRepo
+  createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
 
 const extractHashtags = (postId, text) => {
@@ -79,6 +79,21 @@ export const getPostsByHashtag = async (req, res) => {
     return res.status(500).send(err.message);
   }
 }
+
+export const getPostsByUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows: posts, rowCount } = await readPostsByUserIdRepo(id);
+    if (rowCount === 0) return res.send([]);
+    for (const post of posts) {
+      post.link = await extractMetadata(post.link);
+    };
+    return res.send(posts);
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}
+
 
 export const getTrending = async (req, res) => {
   try {

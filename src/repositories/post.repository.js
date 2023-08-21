@@ -41,6 +41,20 @@ export const readPostsByHashtagRepo = async (hashtag) => {
   `, ['#' + hashtag]);
 };
 
+export const readPostsByUserIdRepo = async (userId) => {
+  return await db.query(`
+    SELECT ${POST_ARGS}, to_json(u.*) user 
+    FROM (SELECT p.*, COUNT(l) likes FROM posts p
+    FULL JOIN likes l ON l."postId" = p.id
+    WHERE p."userId" = $1
+    GROUP BY p.id
+    LIMIT 20) p
+    JOIN (SELECT ${USER_ARGS} FROM users u)u ON p."userId" = u.id
+    ORDER BY p."createdAt" DESC;
+  `, [userId]);
+};
+
+
 export const updateTextRepo = async (id, text) => {
   return await db.query(`UPDATE posts SET text = $2 WHERE id = $1`, [id, text]);
 };
