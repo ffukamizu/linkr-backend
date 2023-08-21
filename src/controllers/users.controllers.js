@@ -21,7 +21,7 @@ export async function signIn(req, res) {
                 id: user.rows[0].id,
                 email: user.rows[0].email,
             },
-            process.env.JWT_SECRET
+            process.env.SECRET_KEY
         );
 
         await insertSessionRepo(user.rows[0].id, token);
