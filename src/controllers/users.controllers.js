@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-import { getUserRepo, insertSessionRepo, insertUserRepo, validateMailRepo } from '../repositories/user.repository.js';
+import { getUserByNameRepo, getUserRepo, insertSessionRepo, insertUserRepo, validateMailRepo } from '../repositories/user.repository.js';
 
 dotenv.config();
 
@@ -61,6 +61,16 @@ export async function getUserById(req, res) {
     try {
         const { rows: [user] } = await getUserRepo(id, null);
         return res.send(user.name);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+
+export async function getUserByName(req, res) {
+    const { name } = req.body;
+    try {
+        const { rows: user } = await getUserByNameRepo(name);
+        return res.send(user);
     } catch (err) {
         res.status(500).send(err.message);
     }

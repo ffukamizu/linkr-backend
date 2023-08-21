@@ -15,6 +15,10 @@ export async function getUserRepo(id, email) {
     );
 }
 
+export async function getUserByNameRepo(name) {
+    return db.query(`SELECT id, name, photo FROM users WHERE name ILIKE $1 || '%';`, [name]);
+}
+
 export async function insertUserRepo(name, email, cryptPassword, photo) {
     return db.query(
         `INSERT INTO 
