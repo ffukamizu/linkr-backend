@@ -18,7 +18,7 @@ export const getPostById = async (id) => {
 
 export const readPostsRepo = async () => {
   return await db.query(`
-    SELECT ${POST_ARGS}, to_json(u.*) user 
+    SELECT ${POST_ARGS}, to_json(u.*) "user" 
     FROM (SELECT p.*, COUNT(l) likes FROM posts p
     FULL JOIN likes l ON l."postId" = p.id
     GROUP BY p.id
@@ -29,7 +29,7 @@ export const readPostsRepo = async () => {
 };
 export const readPostsByHashtagRepo = async (hashtag) => {
   return await db.query(`
-    SELECT ${POST_ARGS}, to_json(u.*) user 
+    SELECT ${POST_ARGS}, to_json(u.*) "user" 
     FROM (SELECT p.*, COUNT(l) likes FROM posts p
     FULL JOIN likes l ON l."postId" = p.id
     JOIN hashtags h ON h."postId" = p.id
@@ -43,7 +43,7 @@ export const readPostsByHashtagRepo = async (hashtag) => {
 
 export const readPostsByUserIdRepo = async (userId) => {
   return await db.query(`
-    SELECT ${POST_ARGS}, to_json(u.*) user 
+    SELECT ${POST_ARGS}, to_json(u.*) "user" 
     FROM (SELECT p.*, COUNT(l) likes FROM posts p
     FULL JOIN likes l ON l."postId" = p.id
     WHERE p."userId" = $1
@@ -53,7 +53,6 @@ export const readPostsByUserIdRepo = async (userId) => {
     ORDER BY p."createdAt" DESC;
   `, [userId]);
 };
-
 
 export const updateTextRepo = async (id, text) => {
   return await db.query(`UPDATE posts SET text = $2 WHERE id = $1`, [id, text]);
