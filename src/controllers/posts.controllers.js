@@ -4,12 +4,12 @@ import {
 } from "../repositories/hashtag.repository.js";
 import {
   createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
-} from "../repositories/post.repository.js";
+} from "../repositories/posts.repository.js";
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
 
-  if(tags) return tags.map(tag => [postId, tag]);
+  if (tags) return tags.map(tag => [postId, tag]);
 
   return null;
 };
@@ -38,10 +38,10 @@ export const createPost = async (req, res) => {
     const result = await createPostRepo(text, link, id);
     const postId = result.rows[0].id;
 
-    if(text) {
+    if (text) {
       const hashtags = extractHashtags(postId, text)
-      
-      if(hashtags) await createHashtagRepo(hashtags);
+
+      if (hashtags) await createHashtagRepo(hashtags);
     };
 
     return res.status(201).send();
@@ -94,7 +94,6 @@ export const getPostsByUser = async (req, res) => {
   }
 }
 
-
 export const getTrending = async (req, res) => {
   try {
     const { rows: trending } = await readHashtagsRepo();
@@ -111,17 +110,17 @@ export const updateText = async (req, res) => {
     const { text } = req.body;
 
     const post = await getPostById(id);
-    if(post.rowCount === 0) return res.sendStatus(404);
-    if(post.rows[0].userId !== userId) return res.status(401).send("Apenas o autor do post pode editá-lo!");
+    if (post.rowCount === 0) return res.sendStatus(404);
+    if (post.rows[0].userId !== userId) return res.status(401).send("Apenas o autor do post pode editá-lo!");
 
     await deleteHashtagByPostIdRepo(post.rows[0].id);
 
     await updateTextRepo(id, text);
 
-    if(text) {
+    if (text) {
       const hashtags = extractHashtags(id, text);
-      
-      if(hashtags) await createHashtagRepo(hashtags);
+
+      if (hashtags) await createHashtagRepo(hashtags);
     };
 
     return res.sendStatus(204);
@@ -137,13 +136,13 @@ export const deletePostById = async (req, res) => {
     const { id } = req.params;
 
     const post = await getPostById(id);
-    if(post.rowCount === 0) return res.status(404);
-    if(post.rows[0].userId !== userId) return res.status(401).send("Apenas o autor do post pode excluí-lo!");
+    if (post.rowCount === 0) return res.status(404);
+    if (post.rows[0].userId !== userId) return res.status(401).send("Apenas o autor do post pode excluí-lo!");
 
     await deleteHashtagByPostIdRepo(post.rows[0].id);
 
     const result = await deletePostRepo(id, userId);
-    if(result.rowCount === 0) return res.status(401).send("Ocorreu um erro ao excluir seu link!");
+    if (result.rowCount === 0) return res.status(401).send("Ocorreu um erro ao excluir seu link!");
 
     return res.sendStatus(204);
   } catch (error) {

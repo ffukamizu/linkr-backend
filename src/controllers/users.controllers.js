@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-import { getUserByNameRepo, getUserRepo, insertSessionRepo, insertUserRepo, validateMailRepo } from '../repositories/user.repository.js';
+import { getUserByNameRepo, getUserRepo, insertSessionRepo, insertUserRepo, validateMailRepo } from '../repositories/users.repository.js';
 
 dotenv.config();
 

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { getUserRepo } from '../repositories/user.repository.js';
+import { getUserRepo } from '../repositories/users.repository.js';
 
 export default async function validateAuth(req, res, next) {
     const { authorization } = req.headers;

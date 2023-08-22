@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createPost, deletePostById, getPosts, getPostsByHashtag, getPostsByUser, getTrending, updateText } from "../controllers/post.controllers.js";
+import { createPost, deletePostById, getPosts, getPostsByHashtag, getPostsByUser, getTrending, updateText } from "../controllers/posts.controllers.js";
 import validateAuth from "../middlewares/validateAuth.middlewares.js";
 import { validateSchema } from "../middlewares/validateSchema.middleware.js";
 import { postSchema } from "../schemas/posts.schema.js";
