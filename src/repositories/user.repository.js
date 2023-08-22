@@ -53,3 +53,15 @@ export async function validateMailRepo(email) {
         [email]
     );
 }
+
+export const followUserRepo = async (followerId, userId) => {
+    return await db.query(`
+      INSERT INTO followers ("followerId", "userId") VALUES ($1, $2);
+    `, [followerId, userId]);
+};
+
+export const unfollowUserRepo = async(followerId, userId) => {
+    return await db.query(`
+        DELETE FROM followers WHERE "followerId" = $1 AND "userId" = $2;
+    `, [followerId, userId]);
+};
