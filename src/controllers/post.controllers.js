@@ -55,9 +55,11 @@ export const getPosts = async (req, res) => {
   try {
     const { rows: posts, rowCount } = await readPostsRepo();
     if (rowCount === 0) return res.send([]);
+    /*
     for (const post of posts) {
       post.link = await extractMetadata(post.link);
-    };
+    }; 
+    */
     return res.send(posts);
 
   } catch (err) {
@@ -71,9 +73,11 @@ export const getPostsByHashtag = async (req, res) => {
     const { hashtag } = req.params;
     const { rows: posts, rowCount } = await readPostsByHashtagRepo(hashtag);
     if (rowCount === 0) return res.send([]);
+    /*
     for (const post of posts) {
       post.link = await extractMetadata(post.link);
     };
+    */
     return res.send(posts);
   } catch (err) {
     return res.status(500).send(err.message);
@@ -85,9 +89,11 @@ export const getPostsByUser = async (req, res) => {
     const { id } = req.params;
     const { rows: posts, rowCount } = await readPostsByUserIdRepo(id);
     if (rowCount === 0) return res.send([]);
+    /*
     for (const post of posts) {
       post.link = await extractMetadata(post.link);
     };
+    */
     return res.send(posts);
   } catch (err) {
     return res.status(500).send(err.message);

@@ -22,7 +22,7 @@ export const readPostsRepo = async () => {
     FROM (SELECT p.*, COUNT(l) likes FROM posts p
     FULL JOIN likes l ON l."postId" = p.id
     GROUP BY p.id
-    LIMIT 20) p
+    LIMIT 10) p
     JOIN (SELECT ${USER_ARGS} FROM users u)u ON p."userId" = u.id
     ORDER BY p."createdAt" DESC;
   `);
@@ -35,7 +35,7 @@ export const readPostsByHashtagRepo = async (hashtag) => {
     JOIN hashtags h ON h."postId" = p.id
     WHERE h.tag = $1
     GROUP BY p.id
-    LIMIT 20) p
+    LIMIT 10) p
     JOIN (SELECT ${USER_ARGS} FROM users u)u ON p."userId" = u.id
     ORDER BY p."createdAt" DESC;
   `, ['#' + hashtag]);
@@ -48,7 +48,7 @@ export const readPostsByUserIdRepo = async (userId) => {
     FULL JOIN likes l ON l."postId" = p.id
     WHERE p."userId" = $1
     GROUP BY p.id
-    LIMIT 20) p
+    LIMIT 10) p
     JOIN (SELECT ${USER_ARGS} FROM users u)u ON p."userId" = u.id
     ORDER BY p."createdAt" DESC;
   `, [userId]);
