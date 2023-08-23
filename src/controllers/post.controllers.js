@@ -63,7 +63,7 @@ export const getPosts = async (req, res) => {
     }; 
     */
     const {rows: userLikes} = await getLikes(user)
-    const {rows: postLikers} = await getRecentPostLikes()
+    const {rows: postLikers} = await getRecentPostLikes(user)
     const likesArray = userLikes.map(obj => obj.postId)  
     const postsObj = posts.map((post,index) =>(
       { ...post,
