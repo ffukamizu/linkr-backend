@@ -32,3 +32,20 @@ export async function getLikes(user){
         `SELECT "postId" FROM likes WHERE "userId"=$1`,[user]
     )
 }
+
+export async function getRecentPostLikes(){
+    return db.query(`
+    SELECT u.name, p.id
+    FROM (
+        SELECT 
+            "userId", 
+            "postId", 
+            ROW_NUMBER() OVER (PARTITION BY "postId" ORDER BY "createdAt" DESC) AS rn
+            FROM likes
+    ) AS ranked
+    LEFT JOIN posts p ON ranked."postId"=p.id
+    LEFT JOIN users u ON ranked."userId"=u.id
+    WHERE rn <= 2
+    ORDER BY p."createdAt"
+    LIMIT 20;`)
+}

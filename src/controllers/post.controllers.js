@@ -5,7 +5,7 @@ import {
 import {
   createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
-import { getLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
+import { getLikes, getRecentPostLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -62,11 +62,16 @@ export const getPosts = async (req, res) => {
       post.link = await extractMetadata(post.link);
     }; 
     */
-   const {rows: userLikes} = await getLikes(user)
-   const likesArray = userLikes.map(obj => obj.postId)  
-   const postsObj = posts.map(post =>({...post,isLiked:likesArray.includes(post.id)}))
-   console.log(postsObj)
-   console.log(userLikes)
+    const {rows: userLikes} = await getLikes(user)
+    const {rows: postLikers} = await getRecentPostLikes()
+    const likesArray = userLikes.map(obj => obj.postId)  
+    const postsObj = posts.map((post,index) =>(
+      { ...post,
+        isLiked:likesArray.includes(post.id),
+        liker1: postLikers[index*2].name,
+        liker2: postLikers[index*2+1].name  
+      }))
+    console.log(postLikers)
     return res.send(postsObj);
 
   } catch (err) {
