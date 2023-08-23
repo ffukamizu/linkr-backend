@@ -65,3 +65,7 @@ export const unfollowUserRepo = async(followerId, userId) => {
         DELETE FROM followers WHERE "followerId" = $1 AND "userId" = $2;
     `, [followerId, userId]);
 };
+
+export const isFollowingRepo = async (followerId, userId) => {
+    return await db.query(`SELECT * FROM followers WHERE "followerId" = $1 AND "userId" = $2`, [followerId, userId]);
+};
