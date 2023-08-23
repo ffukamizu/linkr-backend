@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-import { followUserRepo, getUserByNameRepo, getUserRepo, insertSessionRepo, insertUserRepo, unfollowUserRepo, validateMailRepo } from '../repositories/user.repository.js';
+import { followUserRepo, getUserByNameRepo, getUserRepo, insertSessionRepo, insertUserRepo, isFollowingRepo, unfollowUserRepo, validateMailRepo } from '../repositories/user.repository.js';
 
 dotenv.config();
 
@@ -55,12 +55,23 @@ export async function signUp(req, res) {
 
 export async function signOut(req, res) {}
 
-
 export async function getUserById(req, res) {
-    const { id } = req.params;
     try {
-        const { rows: [user] } = await getUserRepo(id, null);
-        return res.send(user.name);
+        const { id } = req.params;
+        const followerId = res.locals.user.id;
+  
+        const user  = await getUserRepo(id, null);
+        if(user.rowCount === 0) return res.sendStatus(404);
+  
+        const isFollowing = await isFollowingRepo(followerId, id);
+  
+        const userData = {
+            photo: user.rows[0].photo,
+            name: user.rows[0].name,
+            following: isFollowing.rowCount !== 0
+        };
+  
+        return res.send(userData);
     } catch (err) {
         res.status(500).send(err.message);
     }
@@ -81,8 +92,13 @@ export const followUser = async (req, res) => {
         const followerId = res.locals.user.id;
         const { id } = req.params;
 
-        const result = await followUserRepo(followerId, id);
-        if(result.rowCount === 0) return res.status(400).send("Não foi possível realizar esta operação!");
+        if(Number(followerId) === Number(id)) return res.status(422).send("Só é permitido seguir outros usuários!");
+
+        const isFollowing = await isFollowingRepo(followerId, id);
+        if(isFollowing.rowCount !== 0) return res.status(409).send("Este usuário já é seu seguidor!")
+
+        const follow = await followUserRepo(followerId, id);
+        if(follow.rowCount === 0) return res.status(400).send("Não foi possível realizar esta operação!");
 
         return res.sendStatus(201);
     } catch (error) {
@@ -98,8 +114,13 @@ export const unfollowUser = async (req, res) => {
         const followerId = res.locals.user.id;
         const { id } = req.params;
 
-        const result = await unfollowUserRepo(followerId, id);
-        if(result.rowCount === 0) return res.status(400).send("Não foi possível realizar esta operação!");
+        if(Number(followerId) === Number(id)) return res.status(422).send("Só é permitido seguir outros usuários!");
+
+        const isFollowing = await isFollowingRepo(followerId, id);
+        if(isFollowing.rowCount === 0) return res.status(404).send("Você não segue este usuário!");
+
+        const unfollow = await unfollowUserRepo(followerId, id);
+        if(unfollow.rowCount === 0) return res.status(400).send("Não foi possível realizar esta operação!");
 
         return res.sendStatus(204);
     } catch (error) {
