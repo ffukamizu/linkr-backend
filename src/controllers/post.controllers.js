@@ -2,10 +2,10 @@ import urlMetadata from "url-metadata";
 import {
   createHashtagRepo, deleteHashtagByPostIdRepo, readHashtagsRepo
 } from "../repositories/hashtag.repository.js";
+import { getLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 import {
   createPostRepo, createRespostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
-import { getLikes, getRecentPostLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -15,20 +15,28 @@ const extractHashtags = (postId, text) => {
   return null;
 };
 
-const extractMetadata = async (link) => (
-  await urlMetadata(link).then(
+const extractMetadata = async (link) => {
+  const cache = {};
+
+  if (cache[link]) {
+    return cache[link];
+  }
+  const metadata = await urlMetadata(link).then(
     (metadata) => {
+      console.log(metadata);
       return {
-        url: metadata['og:url'],
-        title: metadata['og:title'],
-        description: metadata['og:description'],
-        image: metadata['og:image']
+        url: metadata['og:url'] || metadata['url'],
+        title: metadata['og:title'] || metadata['title'],
+        description: metadata['og:description'] || metadata['description'],
+        image: metadata['og:image'] || metadata['image']
       }
     },
     (err) => {
       return link;
-    })
-)
+    });
+  cache[link] = metadata;
+  return metadata;
+}
 
 export const createPost = async (req, res) => {
   try {
@@ -71,11 +79,13 @@ export const getPosts = async (req, res) => {
   try {
     const { rows: posts, rowCount } = await readPostsRepo(user);
     if (rowCount === 0) return res.send([]);
+
     /*
-    for (const post of posts) {
+    await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
-    }; 
+    })); 
     */
+
     const {rows: userLikes} = await getLikes(user)
     const likesArray = userLikes.map(obj => obj.postId)  
     const postsObj = posts.map((post,index) =>(
@@ -96,10 +106,12 @@ export const getPostsByHashtag = async (req, res) => {
     const { rows: posts, rowCount } = await readPostsByHashtagRepo(hashtag);
     if (rowCount === 0) return res.send([]);
     /*
-    for (const post of posts) {
+    await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
-    };
+      console.log('link', post.link);
+    }));
     */
+
     return res.send(posts);
   } catch (err) {
     return res.status(500).send(err.message);
@@ -112,10 +124,12 @@ export const getPostsByUser = async (req, res) => {
     const { rows: posts, rowCount } = await readPostsByUserIdRepo(id);
     if (rowCount === 0) return res.send([]);
     /*
-    for (const post of posts) {
+    await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
-    };
+      console.log('link', post.link);
+    }));
     */
+
     return res.send(posts);
   } catch (err) {
     return res.status(500).send(err.message);
