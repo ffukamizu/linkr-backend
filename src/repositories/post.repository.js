@@ -12,6 +12,10 @@ export const createPostRepo = async (text = '', link, userId) => {
   );
 };
 
+export const createRespostRepo = async (postId, userId) => {
+  return await db.query(`INSERT INTO reposts ("postId", "userId") VALUES ($1, $2)`, [postId, userId]);
+};
+
 export const getPostById = async (id) => {
   return await db.query(`SELECT * FROM posts WHERE id = $1`, [id]);
 };

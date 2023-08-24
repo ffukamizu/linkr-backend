@@ -3,7 +3,7 @@ import {
   createHashtagRepo, deleteHashtagByPostIdRepo, readHashtagsRepo
 } from "../repositories/hashtag.repository.js";
 import {
-  createPostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
+  createPostRepo, createRespostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
 import { getLikes, getRecentPostLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 
@@ -50,6 +50,20 @@ export const createPost = async (req, res) => {
     console.log(error);
     return res.status(500).send("Houve um erro ao publicar seu link");
   }
+};
+
+export const createRepost = async (req, res) => {
+  try {
+    const userId = res.locals.user.id;
+    const { id } = req.params;
+
+    await createRespostRepo(id, userId);
+
+    return res.sendStatus(201);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error.message);
+  };
 };
 
 export const getPosts = async (req, res) => {
