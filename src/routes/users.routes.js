@@ -10,7 +10,7 @@ const usersRouter = Router();
 usersRouter.post('/signup', validateSchema(signupSchema), signUp);
 usersRouter.post('/signin', validateSchema(signinSchema), signIn);
 usersRouter.get('/user/:id', validateAuth, getUserById)
-usersRouter.get('/search/user/', validateAuth, getUserByName)
+usersRouter.post('/search/user/', validateAuth, getUserByName)
 usersRouter.post('/user/follow/:id', validateAuth, followUser);
 usersRouter.delete('/user/follow/:id', validateAuth, unfollowUser);
 
