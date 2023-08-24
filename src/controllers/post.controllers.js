@@ -5,6 +5,7 @@ import {
 import {
   createPostRepo, createRespostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
+import { getLikes, getRecentPostLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -66,15 +67,22 @@ export const createRepost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
+  const user = res.locals.user.id
   try {
-    const { rows: posts, rowCount } = await readPostsRepo();
+    const { rows: posts, rowCount } = await readPostsRepo(user);
     if (rowCount === 0) return res.send([]);
     /*
     for (const post of posts) {
       post.link = await extractMetadata(post.link);
     }; 
     */
-    return res.send(posts);
+    const {rows: userLikes} = await getLikes(user)
+    const likesArray = userLikes.map(obj => obj.postId)  
+    const postsObj = posts.map((post,index) =>(
+      { ...post,
+        isLiked:likesArray.includes(post.id),
+      }))
+    return res.send(postsObj);
 
   } catch (err) {
     console.log(err);
@@ -171,3 +179,15 @@ export const deletePostById = async (req, res) => {
     return res.status(500).send(error.message);
   };
 };
+
+export async function switchLikePost(req, res){
+  const user = res.locals.user.id
+  const {post} = req.body
+  const likeCheck = await verifyLike(user,post)
+  if(likeCheck.rowCount === 0){
+    const like = await likePost(user,post)
+    return res.status(201).send("Liked")
+  }
+  const noLike = await removeLikePost(user,post)
+  return res.sendStatus(204)
+}
