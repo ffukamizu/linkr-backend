@@ -2,7 +2,7 @@ import urlMetadata from "url-metadata";
 import {
   createHashtagRepo, deleteHashtagByPostIdRepo, readHashtagsRepo
 } from "../repositories/hashtag.repository.js";
-import { getLikes, likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
+import { likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 import {
   createPostRepo, createRespostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
@@ -75,10 +75,11 @@ export const createRepost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
-  const user = res.locals.user.id
+  const user = res.locals.user;
   try {
-    const { rows: posts, rowCount } = await readPostsRepo(user);
+    const { rows: posts, rowCount } = await readPostsRepo(user.id);
     if (rowCount === 0) return res.send([]);
+    return res.send(posts);
 
     /*
     await Promise.all(posts.map(async (post) => {
@@ -86,13 +87,15 @@ export const getPosts = async (req, res) => {
     })); 
     */
 
+    /*
     const {rows: userLikes} = await getLikes(user)
     const likesArray = userLikes.map(obj => obj.postId)  
     const postsObj = posts.map((post,index) =>(
       { ...post,
         isLiked:likesArray.includes(post.id),
-      }))
+      })) 
     return res.send(postsObj);
+    */
 
   } catch (err) {
     console.log(err);
@@ -102,8 +105,8 @@ export const getPosts = async (req, res) => {
 
 export const getPostsByHashtag = async (req, res) => {
   try {
-    const { hashtag } = req.params;
-    const { rows: posts, rowCount } = await readPostsByHashtagRepo(hashtag);
+    const { user, hashtag } = { ...res.locals, ...req.params };
+    const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag);
     if (rowCount === 0) return res.send([]);
     /*
     await Promise.all(posts.map(async (post) => {
@@ -114,14 +117,15 @@ export const getPostsByHashtag = async (req, res) => {
 
     return res.send(posts);
   } catch (err) {
+    console.log(err);
     return res.status(500).send(err.message);
   }
 }
 
 export const getPostsByUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { rows: posts, rowCount } = await readPostsByUserIdRepo(id);
+    const { user, id } = { ...res.locals, ...req.params };
+    const { rows: posts, rowCount } = await readPostsByUserIdRepo(user.id, id);
     if (rowCount === 0) return res.send([]);
     /*
     await Promise.all(posts.map(async (post) => {
@@ -132,6 +136,7 @@ export const getPostsByUser = async (req, res) => {
 
     return res.send(posts);
   } catch (err) {
+    console.log(err);
     return res.status(500).send(err.message);
   }
 }
