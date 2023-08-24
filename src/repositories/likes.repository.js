@@ -45,7 +45,7 @@ export async function getRecentPostLikes(userId){
     ) AS ranked
     LEFT JOIN posts p ON ranked."postId"=p.id
     LEFT JOIN users u ON ranked."userId"=u.id
-    WHERE rn <= 2
+    WHERE rn = 1 
     ORDER BY p."createdAt"
-    LIMIT 20;`,[userId])
+    LIMIT 10;`,[userId])
 }

@@ -55,7 +55,7 @@ export const createPost = async (req, res) => {
 export const getPosts = async (req, res) => {
   const user = res.locals.user.id
   try {
-    const { rows: posts, rowCount } = await readPostsRepo();
+    const { rows: posts, rowCount } = await readPostsRepo(user);
     if (rowCount === 0) return res.send([]);
     /*
     for (const post of posts) {
@@ -63,15 +63,11 @@ export const getPosts = async (req, res) => {
     }; 
     */
     const {rows: userLikes} = await getLikes(user)
-    const {rows: postLikers} = await getRecentPostLikes(user)
     const likesArray = userLikes.map(obj => obj.postId)  
     const postsObj = posts.map((post,index) =>(
       { ...post,
         isLiked:likesArray.includes(post.id),
-        liker1: postLikers[index*2].name,
-        liker2: postLikers[index*2+1].name  
       }))
-    console.log(postLikers)
     return res.send(postsObj);
 
   } catch (err) {
