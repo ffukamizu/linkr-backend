@@ -22,19 +22,18 @@ const cache = {};
 const extractMetadata = async (link) => {
 
   if (cache[link]) return cache[link];
-  await urlMetadata(link).then(
-    (metadata) => {
-      cache[link] = {
+  try {
+    const metadata = await urlMetadata(link);
+    cache[link] = {
         url: metadata['og:url'] || metadata['url'],
         title: metadata['og:title'] || metadata['title'],
         description: metadata['og:description'] || metadata['description'],
         image: metadata['og:image'] || metadata['image']
       }
-    },
-    (err) => {
-      console.log(err);
+  } catch (err) {
       cache[link] = link;
-    });
+    console.log(err);
+  }
   return cache[link];
 }
 
