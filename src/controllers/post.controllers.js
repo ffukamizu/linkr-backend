@@ -76,11 +76,9 @@ export const createRepost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
-  const { user, query } = { ...res.locals, query: req.query };
+  const { user, offset } = { ...res.locals, ...req.query };
   try {
-    const { rows: posts, rowCount } = await readPostsRepo(user.id, query.offset);
-
-    console.log(posts.length, "posts length");
+    const { rows: posts, rowCount } = await readPostsRepo(user.id, offset);
 
     if (rowCount === 0) {
       const { rows: followers } = await getFollowersByUserId(user.id);
@@ -113,8 +111,8 @@ export const getPosts = async (req, res) => {
 
 export const getPostsByHashtag = async (req, res) => {
   try {
-    const { user, hashtag } = { ...res.locals, ...req.params };
-    const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag);
+    const { user, hashtag, offset } = { ...res.locals, ...req.params, ...req.query };
+    const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag, offset);
     if (rowCount === 0) return res.send([]);
 
     await Promise.all(posts.map(async (post) => {
@@ -130,12 +128,12 @@ export const getPostsByHashtag = async (req, res) => {
 
 export const getPostsByUser = async (req, res) => {
   try {
-    const { user, id } = { ...res.locals, ...req.params };
-    const { rows: [data], rowCount } = await readPostsByUserIdRepo(user.id, id);
+    const { user, id, offset } = { ...res.locals, ...req.params, ...req.query };
+    const { rows: [data], rowCount } = await readPostsByUserIdRepo(user.id, id, offset);
     if (rowCount === 0) return res.send([]);
 
     await Promise.all(data.posts.map(async (post) => {
-      data.posts.link = await extractMetadata(post.link);
+      post.link = await extractMetadata(post.link);
     }));
 
     return res.send(data);

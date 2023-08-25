@@ -37,13 +37,13 @@ export const readPostsRepo = async (userId, OFFSET) => {
   const SQL_ARGS = [userId];
 
   if (OFFSET && !isNaN(Number(OFFSET))) {
-    SQL_FINAL += `OFFSET $2 `
     SQL_ARGS.push(OFFSET);
+    SQL_FINAL += ` OFFSET $${SQL_ARGS.length}`
   }
   return await db.query(SQL_FINAL + ';', [...SQL_ARGS]);
 };
-export const readPostsByHashtagRepo = async (userId, hashtag) => {
-  return await db.query(`
+export const readPostsByHashtagRepo = async (userId, hashtag, OFFSET) => {
+  let SQL_FINAL = `
   ${WITH_POSTS}
     SELECT pp.*, to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
@@ -52,27 +52,42 @@ export const readPostsByHashtagRepo = async (userId, hashtag) => {
     WHERE h.tag = $2
     ORDER BY pp."createdAt" DESC
     LIMIT 10
-    ;  
-  `, [userId, '#' + hashtag]);
+  `;
+
+  const SQL_ARGS = [userId, '#' + hashtag];
+
+  if (OFFSET && !isNaN(Number(OFFSET))) {
+    SQL_ARGS.push(OFFSET);
+    SQL_FINAL += ` OFFSET $${SQL_ARGS.length}`
+  }
+  return await db.query(SQL_FINAL + ';', [...SQL_ARGS]);
 };
 
-export const readPostsByUserIdRepo = async (userId, ByUserId) => {
+export const readPostsByUserIdRepo = async (userId, ByUserId, OFFSET) => {
+  let SQL_POSTS = `
+    SELECT p.* FROM POSTS p
+    JOIN PUBLIC.POSTS pp ON p.id = pp.id
+    WHERE pp."userId" = u.id
+    ORDER BY p."createdAt" DESC
+    LIMIT 10
+  `;
+  const SQL_ARGS = [userId, ByUserId];
+
+  if (OFFSET && !isNaN(Number(OFFSET))) {
+    SQL_ARGS.push(OFFSET);
+    SQL_POSTS += ` OFFSET $${SQL_ARGS.length}`
+  }
   return await db.query(`
   ${WITH_POSTS}
-    SELECT u.id, u.name, u.photo, u."createdAt", (
-      SELECT COALESCE(json_agg(p ORDER BY p."createdAt" DESC), '[]') "posts"
-        FROM (
-          SELECT p.* FROM POSTS p
-          JOIN PUBLIC.POSTS pp ON p.id = pp.id
-          WHERE pp."userId" = u.id
-          ORDER BY p."createdAt" DESC
-          LIMIT 10
-        ) p
-      )
+    SELECT u.id, u.name, u.photo, u."createdAt", 
+    (
+      SELECT COALESCE(json_agg(p ORDER BY p."createdAt" DESC), '[]') "posts" 
+      FROM (${SQL_POSTS}) p 
+    )
     FROM USERS u
     WHERE u.id = $2
     ;
-  `, [userId, ByUserId]);
+  `, [...SQL_ARGS]);
 };
 
 export const updateTextRepo = async (id, text) => {
