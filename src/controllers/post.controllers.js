@@ -227,3 +227,13 @@ export async function postComment(req,res){
     res.status(500).send(err.message);
   }
 }
+
+export async function getComments(req,res){
+  const {postId} = req.params
+  try {
+    const {rows:comments} = await getCommentsById(postId)
+    res.status(200).send(comments)
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}

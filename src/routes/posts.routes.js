@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createPost, createRepost, deletePostById, getPosts, getPostsByHashtag, getPostsByUser, getTrending, postComment, switchLikePost, updateText } from "../controllers/post.controllers.js";
+import { createPost, createRepost, deletePostById, getComments, getPosts, getPostsByHashtag, getPostsByUser, getTrending, postComment, switchLikePost, updateText } from "../controllers/post.controllers.js";
 import validateAuth from "../middlewares/validateAuth.middlewares.js";
 import { validateSchema } from "../middlewares/validateSchema.middleware.js";
 import { postSchema } from "../schemas/posts.schema.js";
@@ -17,5 +17,6 @@ postsRouter.patch('/posts/:id', validateAuth, updateText);
 postsRouter.delete('/posts/:id', validateAuth, deletePostById);
 postsRouter.post('/likes',validateAuth,validateSchema(likeSchema), switchLikePost);
 postsRouter.post('/comment', validateAuth, validateSchema(commentSchema), postComment)
+postsRouter.get('/comments/:postId', validateAuth, getComments)
 
 export default postsRouter;

@@ -21,9 +21,12 @@ export const getPostById = async (id) => {
 export const readPostsRepo = async (userId) => {
   return await db.query(`
   ${WITH_POSTS}
-    SELECT pp.*, to_json(u.*) "owner" FROM POSTS pp
+    SELECT comms.totalcomms, pp.*, to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
+    LEFT JOIN (
+      SELECT "postId", COUNT(*) as totalcomms FROM comments GROUP BY "postId"
+    ) comms ON comms."postId"=pp.id
     WHERE p."userId" = $1 OR p."userId" IN (
       SELECT "followerId" FROM PUBLIC.FOLLOWERS f WHERE f."userId" = $1
     )
@@ -80,6 +83,7 @@ export const getCommentsById = async (postId) => {
     LEFT JOIN users u ON c."userId" = u.id
     WHERE 
       "postId"=$1
+    ORDER BY c."createdAt" ASC 
   `,[postId])
 }
 
