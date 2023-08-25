@@ -15,27 +15,26 @@ const extractHashtags = (postId, text) => {
   return null;
 };
 
-const extractMetadata = async (link) => {
-  const cache = {};
+const cache = {};
 
-  if (cache[link]) {
-    return cache[link];
-  }
-  const metadata = await urlMetadata(link).then(
+const extractMetadata = async (link) => {
+
+  if (cache[link]) return cache[link];
+  return await urlMetadata(link).then(
     (metadata) => {
-      console.log(metadata);
-      return {
+      const result = {
         url: metadata['og:url'] || metadata['url'],
         title: metadata['og:title'] || metadata['title'],
         description: metadata['og:description'] || metadata['description'],
         image: metadata['og:image'] || metadata['image']
       }
+      cache[result] = result;
+      return result;
     },
-    (err) => {
-      return link;
+    () => {
+      cache[link] = link;
+      return cache[link];
     });
-  cache[link] = metadata;
-  return metadata;
 }
 
 export const createPost = async (req, res) => {
@@ -79,13 +78,12 @@ export const getPosts = async (req, res) => {
   try {
     const { rows: posts, rowCount } = await readPostsRepo(user.id);
     if (rowCount === 0) return res.send([]);
-    return res.send(posts);
 
-    /*
     await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
-    })); 
-    */
+    }));
+
+    return res.send(posts);
 
     /*
     const {rows: userLikes} = await getLikes(user)
@@ -108,12 +106,10 @@ export const getPostsByHashtag = async (req, res) => {
     const { user, hashtag } = { ...res.locals, ...req.params };
     const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag);
     if (rowCount === 0) return res.send([]);
-    /*
+
     await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
-      console.log('link', post.link);
     }));
-    */
 
     return res.send(posts);
   } catch (err) {
@@ -125,16 +121,14 @@ export const getPostsByHashtag = async (req, res) => {
 export const getPostsByUser = async (req, res) => {
   try {
     const { user, id } = { ...res.locals, ...req.params };
-    const { rows: posts, rowCount } = await readPostsByUserIdRepo(user.id, id);
+    const { rows: [data], rowCount } = await readPostsByUserIdRepo(user.id, id);
     if (rowCount === 0) return res.send([]);
-    /*
-    await Promise.all(posts.map(async (post) => {
-      post.link = await extractMetadata(post.link);
-      console.log('link', post.link);
-    }));
-    */
 
-    return res.send(posts);
+    await Promise.all(data.posts.map(async (post) => {
+      data.posts.link = await extractMetadata(post.link);
+    }));
+
+    return res.send(data);
   } catch (err) {
     console.log(err);
     return res.status(500).send(err.message);

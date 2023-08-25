@@ -24,10 +24,10 @@ export const readPostsRepo = async (userId) => {
     SELECT pp.*, to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
-    WHERE p."userId" = $1 OR p."userId" IN (
-      SELECT "followerId" FROM PUBLIC.FOLLOWERS f WHERE f."userId" = $1
+    WHERE p."userId" IN (
+      SELECT "userId" FROM PUBLIC.FOLLOWERS WHERE "followerId" = $1
     )
-    ORDER BY pp."createdAt" DESC
+    ORDER BY pp."createdAt" DESC;
   `,[userId]);
 };
 export const readPostsByHashtagRepo = async (userId, hashtag) => {
@@ -38,7 +38,7 @@ export const readPostsByHashtagRepo = async (userId, hashtag) => {
     JOIN USERS u ON p."userId" = u.id
     JOIN hashtags h ON h."postId" = pp.id
     WHERE h.tag = $2
-    ORDER BY pp."createdAt" DESC  
+    ORDER BY pp."createdAt" DESC;  
   `, [userId, '#' + hashtag]);
 };
 
