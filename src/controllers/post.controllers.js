@@ -22,21 +22,20 @@ const cache = {};
 const extractMetadata = async (link) => {
 
   if (cache[link]) return cache[link];
-  return await urlMetadata(link).then(
+  await urlMetadata(link).then(
     (metadata) => {
-      const result = {
+      cache[link] = {
         url: metadata['og:url'] || metadata['url'],
         title: metadata['og:title'] || metadata['title'],
         description: metadata['og:description'] || metadata['description'],
         image: metadata['og:image'] || metadata['image']
       }
-      cache[result] = result;
-      return result;
     },
-    () => {
+    (err) => {
+      console.log(err);
       cache[link] = link;
-      return cache[link];
     });
+  return cache[link];
 }
 
 export const createPost = async (req, res) => {
