@@ -7,6 +7,7 @@ import {
   createComment,
   createPostRepo, createRespostRepo, deletePostRepo, getCommentsById, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
+import { getFollowersByUserId } from '../repositories/user.repository.js';
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -75,10 +76,18 @@ export const createRepost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
-  const user = res.locals.user;
+  const { user, query } = { ...res.locals, query: req.query };
   try {
-    const { rows: posts, rowCount } = await readPostsRepo(user.id);
-    if (rowCount === 0) return res.send([]);
+    const { rows: posts, rowCount } = await readPostsRepo(user.id, query.offset);
+
+    console.log(posts.length, "posts length");
+
+    if (rowCount === 0) {
+      const { rows: followers } = await getFollowersByUserId(user.id);
+      console.log(followers);
+      if (followers.length === 0) return res.send("You don't follow anyone yet. Search for new friends!");
+      else return res.send("No posts found from your friends");
+    }
 
     await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
