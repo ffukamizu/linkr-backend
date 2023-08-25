@@ -21,7 +21,7 @@ export const getPostById = async (id) => {
 export const readPostsRepo = async (userId) => {
   return await db.query(`
   ${WITH_POSTS}
-    SELECT comms.totalcomms, pp.*, to_json(u.*) "owner" FROM POSTS pp
+    SELECT comms.totalcomms, pp.*, (SELECT COUNT(*) FROM reposts WHERE "postId" = p.id) as "repostCount", to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
     LEFT JOIN (
