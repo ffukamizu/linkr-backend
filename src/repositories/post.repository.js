@@ -27,10 +27,10 @@ export const readPostsRepo = async (userId) => {
     LEFT JOIN (
       SELECT "postId", COUNT(*) as totalcomms FROM comments GROUP BY "postId"
     ) comms ON comms."postId"=pp.id
-    WHERE p."userId" = $1 OR p."userId" IN (
-      SELECT "followerId" FROM PUBLIC.FOLLOWERS f WHERE f."userId" = $1
+    WHERE p."userId" IN (
+      SELECT "userId" FROM PUBLIC.FOLLOWERS WHERE "followerId" = $1
     )
-    ORDER BY pp."createdAt" DESC
+    ORDER BY pp."createdAt" DESC;
   `,[userId]);
 };
 export const readPostsByHashtagRepo = async (userId, hashtag) => {
@@ -41,7 +41,7 @@ export const readPostsByHashtagRepo = async (userId, hashtag) => {
     JOIN USERS u ON p."userId" = u.id
     JOIN hashtags h ON h."postId" = pp.id
     WHERE h.tag = $2
-    ORDER BY pp."createdAt" DESC  
+    ORDER BY pp."createdAt" DESC;  
   `, [userId, '#' + hashtag]);
 };
 
