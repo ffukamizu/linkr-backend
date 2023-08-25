@@ -74,17 +74,21 @@ export const createComment = async (userId, postId, comment) => {
   `,[userId,postId,comment])
 }
 
-export const getCommentsById = async (postId) => {
+export const getCommentsById = async (postId, userId) => {
   return await db.query(`
     SELECT 
-      c.comment, u.name, u.photo 
+      c.comment, u.id as "userId", u.name, u.photo, uf."userId" as follow
     FROM 
       comments c
     LEFT JOIN users u ON c."userId" = u.id
+    LEFT JOIN (
+      SELECT * FROM followers f
+      WHERE f."followerId"=$2
+    ) uf ON uf."userId"=c."userId"
     WHERE 
       "postId"=$1
     ORDER BY c."createdAt" ASC 
-  `,[postId])
+  `,[postId,userId])
 }
 
 const WITH_POSTS = `
