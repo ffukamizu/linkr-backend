@@ -7,6 +7,7 @@ import {
   createComment,
   createPostRepo, createRespostRepo, deletePostRepo, getCommentsById, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
+import { getFollowersByUserId } from '../repositories/user.repository.js';
 
 const extractHashtags = (postId, text) => {
   const tags = text.match(/#[a-z0-9_]+/g);
@@ -21,21 +22,20 @@ const cache = {};
 const extractMetadata = async (link) => {
 
   if (cache[link]) return cache[link];
-  return await urlMetadata(link).then(
+  await urlMetadata(link).then(
     (metadata) => {
-      const result = {
+      cache[link] = {
         url: metadata['og:url'] || metadata['url'],
         title: metadata['og:title'] || metadata['title'],
         description: metadata['og:description'] || metadata['description'],
         image: metadata['og:image'] || metadata['image']
       }
-      cache[result] = result;
-      return result;
     },
-    () => {
+    (err) => {
+      console.log(err);
       cache[link] = link;
-      return cache[link];
     });
+  return cache[link];
 }
 
 export const createPost = async (req, res) => {
@@ -75,10 +75,16 @@ export const createRepost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
-  const user = res.locals.user;
+  const { user, offset } = { ...res.locals, ...req.query };
   try {
-    const { rows: posts, rowCount } = await readPostsRepo(user.id);
-    if (rowCount === 0) return res.send([]);
+    const { rows: posts, rowCount } = await readPostsRepo(user.id, offset);
+
+    if (rowCount === 0) {
+      const { rows: followers } = await getFollowersByUserId(user.id);
+      console.log(followers);
+      if (followers.length === 0) return res.send("You don't follow anyone yet. Search for new friends!");
+      else return res.send("No posts found from your friends");
+    }
 
     await Promise.all(posts.map(async (post) => {
       post.link = await extractMetadata(post.link);
@@ -104,8 +110,8 @@ export const getPosts = async (req, res) => {
 
 export const getPostsByHashtag = async (req, res) => {
   try {
-    const { user, hashtag } = { ...res.locals, ...req.params };
-    const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag);
+    const { user, hashtag, offset } = { ...res.locals, ...req.params, ...req.query };
+    const { rows: posts, rowCount } = await readPostsByHashtagRepo(user.id, hashtag, offset);
     if (rowCount === 0) return res.send([]);
 
     await Promise.all(posts.map(async (post) => {
@@ -121,12 +127,12 @@ export const getPostsByHashtag = async (req, res) => {
 
 export const getPostsByUser = async (req, res) => {
   try {
-    const { user, id } = { ...res.locals, ...req.params };
-    const { rows: [data], rowCount } = await readPostsByUserIdRepo(user.id, id);
+    const { user, id, offset } = { ...res.locals, ...req.params, ...req.query };
+    const { rows: [data], rowCount } = await readPostsByUserIdRepo(user.id, id, offset);
     if (rowCount === 0) return res.send([]);
 
     await Promise.all(data.posts.map(async (post) => {
-      data.posts.link = await extractMetadata(post.link);
+      post.link = await extractMetadata(post.link);
     }));
 
     return res.send(data);
