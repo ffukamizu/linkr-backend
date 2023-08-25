@@ -21,7 +21,9 @@ export const getPostById = async (id) => {
 export const readPostsRepo = async (userId, OFFSET) => {
   let SQL_FINAL = `
   ${WITH_POSTS}
-    SELECT comms.totalcomms, pp.*, (SELECT COUNT(*) FROM reposts WHERE "postId" = p.id) as "repostCount", to_json(u.*) "owner" FROM POSTS pp
+    SELECT comms.totalcomms, pp.*, (
+      SELECT COUNT(*) FROM reposts WHERE "postId" = p.id
+      ) as "repostCount", to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
     LEFT JOIN (
@@ -45,10 +47,15 @@ export const readPostsRepo = async (userId, OFFSET) => {
 export const readPostsByHashtagRepo = async (userId, hashtag, OFFSET) => {
   let SQL_FINAL = `
   ${WITH_POSTS}
-    SELECT pp.*, to_json(u.*) "owner" FROM POSTS pp
+  SELECT comms.totalcomms, pp.*, (
+    SELECT COUNT(*) FROM reposts WHERE "postId" = p.id
+    ) as "repostCount", to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
     JOIN hashtags h ON h."postId" = pp.id
+    LEFT JOIN (
+      SELECT "postId", COUNT(*) as totalcomms FROM comments GROUP BY "postId"
+    ) comms ON comms."postId"=pp.id
     WHERE h.tag = $2
     ORDER BY pp."createdAt" DESC
     LIMIT 10
@@ -65,8 +72,13 @@ export const readPostsByHashtagRepo = async (userId, hashtag, OFFSET) => {
 
 export const readPostsByUserIdRepo = async (userId, ByUserId, OFFSET) => {
   let SQL_POSTS = `
-    SELECT p.* FROM POSTS p
+    SELECT comms.totalcomms, p.*, (
+    SELECT COUNT(*) FROM reposts WHERE "postId" = p.id
+    ) as "repostCount" FROM POSTS p
     JOIN PUBLIC.POSTS pp ON p.id = pp.id
+    LEFT JOIN (
+      SELECT "postId", COUNT(*) as totalcomms FROM comments GROUP BY "postId"
+    ) comms ON comms."postId"=pp.id
     WHERE pp."userId" = u.id
     ORDER BY p."createdAt" DESC
     LIMIT 10
