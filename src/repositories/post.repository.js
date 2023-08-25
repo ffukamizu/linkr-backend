@@ -21,7 +21,7 @@ export const getPostById = async (id) => {
 export const readPostsRepo = async (userId, OFFSET) => {
   let SQL_FINAL = `
   ${WITH_POSTS}
-    SELECT comms.totalcomms, pp.*, to_json(u.*) "owner" FROM POSTS pp
+    SELECT comms.totalcomms, pp.*, (SELECT COUNT(*) FROM reposts WHERE "postId" = p.id) as "repostCount", to_json(u.*) "owner" FROM POSTS pp
     JOIN PUBLIC.POSTS p ON pp.id = p.id
     JOIN USERS u ON p."userId" = u.id
     LEFT JOIN (
@@ -104,17 +104,21 @@ export const createComment = async (userId, postId, comment) => {
   `,[userId,postId,comment])
 }
 
-export const getCommentsById = async (postId) => {
+export const getCommentsById = async (postId, userId) => {
   return await db.query(`
     SELECT 
-      c.comment, u.name, u.photo 
+      c.comment, u.id as "userId", u.name, u.photo, uf."userId" as follow
     FROM 
       comments c
     LEFT JOIN users u ON c."userId" = u.id
+    LEFT JOIN (
+      SELECT * FROM followers f
+      WHERE f."followerId"=$2
+    ) uf ON uf."userId"=c."userId"
     WHERE 
       "postId"=$1
     ORDER BY c."createdAt" ASC 
-  `,[postId])
+  `,[postId,userId])
 }
 
 const WITH_POSTS = `

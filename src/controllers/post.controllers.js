@@ -222,7 +222,7 @@ export async function postComment(req,res){
   const {comment , postId} = req.body
   try {
     const insertComment = await createComment(user,postId,comment)
-    const {rows:updatedComments} = await getCommentsById(postId)
+    const {rows:updatedComments} = await getCommentsById(postId,user)
     res.status(201).send(updatedComments)
   } catch (err) {
     res.status(500).send(err.message);
@@ -230,9 +230,10 @@ export async function postComment(req,res){
 }
 
 export async function getComments(req,res){
+  const userId = res.locals.user.id
   const {postId} = req.params
   try {
-    const {rows:comments} = await getCommentsById(postId)
+    const {rows:comments} = await getCommentsById(postId,userId)
     res.status(200).send(comments)
   } catch (err) {
     res.status(500).send(err.message);
