@@ -65,6 +65,24 @@ export const deletePostRepo = async (id, userId) => {
   return await db.query(`DELETE FROM posts WHERE id = $1 AND "userId" = $2`, [id, userId]);
 };
 
+export const createComment = async (userId, postId, comment) => {
+  return await db.query(`
+    INSERT INTO comments ("userId", "postId", "comment") VALUES ($1,$2,$3)
+  `,[userId,postId,comment])
+}
+
+export const getCommentsById = async (postId) => {
+  return await db.query(`
+    SELECT 
+      c.comment, u.name, u.photo 
+    FROM 
+      comments c
+    LEFT JOIN users u ON c."userId" = u.id
+    WHERE 
+      "postId"=$1
+  `,[postId])
+}
+
 const WITH_POSTS = `
 WITH "users" AS (
   SELECT u.id, u.name, u.photo, u."createdAt" FROM users u

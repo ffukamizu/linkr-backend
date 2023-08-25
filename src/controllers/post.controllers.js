@@ -4,7 +4,8 @@ import {
 } from "../repositories/hashtag.repository.js";
 import { likePost, removeLikePost, verifyLike } from "../repositories/likes.repository.js";
 import {
-  createPostRepo, createRespostRepo, deletePostRepo, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
+  createComment,
+  createPostRepo, createRespostRepo, deletePostRepo, getCommentsById, getPostById, readPostsByHashtagRepo, readPostsByUserIdRepo, readPostsRepo, updateTextRepo
 } from "../repositories/post.repository.js";
 
 const extractHashtags = (postId, text) => {
@@ -202,11 +203,27 @@ export const deletePostById = async (req, res) => {
 export async function switchLikePost(req, res){
   const user = res.locals.user.id
   const {post} = req.body
-  const likeCheck = await verifyLike(user,post)
-  if(likeCheck.rowCount === 0){
-    const like = await likePost(user,post)
-    return res.status(201).send("Liked")
+  try {
+    const likeCheck = await verifyLike(user,post)
+    if(likeCheck.rowCount === 0){
+      const like = await likePost(user,post)
+      return res.status(201).send("Liked")
+    }
+    const noLike = await removeLikePost(user,post)
+    return res.sendStatus(204)
+  } catch (err) {
+    res.status(500).send(err.message);
   }
-  const noLike = await removeLikePost(user,post)
-  return res.sendStatus(204)
+}
+
+export async function postComment(req,res){
+  const user = res.locals.user.id
+  const {comment , postId} = req.body
+  try {
+    const insertComment = await createComment(user,postId,comment)
+    const {rows:updatedComments} = await getCommentsById(postId)
+    res.status(201).send(updatedComments)
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 }
